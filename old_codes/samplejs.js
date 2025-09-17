@@ -96,12 +96,12 @@ async function setSelectedText(text) {
                     }
                 } else {
                     // If no shape selected, add text to current slide
-                    const selectedSlides = context.presentation.getSelectedSlides();
-                    selectedSlides.load('items');
+                    const slides = context.presentation.slides;
+                    slides.load('items');
                     await context.sync();
 
-                    if (selectedSlides.items.length > 0) {
-                        const currentSlide = selectedSlides.items[0];
+                    if (slides.items.length > 0) {
+                        const currentSlide = slides.items[0]; // Or get the active slide
                         const textBox = currentSlide.shapes.addTextBox(text);
                         textBox.left = 100;
                         textBox.top = 100;
@@ -191,7 +191,6 @@ async function loadById() {
 
         const data = await response.json();
         await setSelectedText(data.text);
-        document.getElementById('selectedText').value = data.text;
         setStatus('Loaded text into selection');
     } catch (err) {
         const errorMsg = 'Error loading: ' + (err.message || err);
@@ -210,17 +209,8 @@ async function updateById() {
             return;
         }
 
-        const textArea = document.getElementById('selectedText');
-        const text = textArea ? textArea.value.trim() : '';
-
-        if (!text) {
-            setStatus('No text to update');
-            return;
-        }
-
+        const text = await getSelectedText();
         setStatus('Updating ID ' + id + '...');
-
-        await setSelectedText(text);
 
         const response = await fetch(apiBase + '/texts/' + encodeURIComponent(id), {
             method: 'PUT',
